@@ -15,6 +15,41 @@ PLAYER_VEL = 5
 
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 
+class Player(pygame.sprite.Sprite):
+    COLOR = (100, 0, 0)
+
+    def __init__(self, x, y, width, height):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.x_vel = 0
+        self.y_vel = 0
+        self.mask = None
+        self.direction = 'left'
+        self.animation_count = 0
+
+    def move(self, dx, dy):
+        self.rect.x += dx
+        self.rect.y += dy
+
+    def move_left(self, vel):
+        self.x_vel = -vel
+        if self.direction != 'left':
+            self.direction = 'left'
+            self.animation_count = 0
+
+    def move_right(self, vel):
+        self.x_vel = vel
+        if self.direction != 'right':
+            self.direction = 'right'
+            self.animation_count = 0
+
+    def loop(self, fps):        # updates x coordinate according to x_velocity
+        self.move(self.x_vel, self.y_vel)
+
+    def draw(self, win):
+        pygame.draw.rect(win, self.COLOR, self.rect)
+
+    
+
 def get_background(tile):
     img = pygame.image.load(join("assets", "background", tile))
     _, _, width, height = img.get_rect()
@@ -27,15 +62,28 @@ def get_background(tile):
 
     return tiles, img
     
-def draw(window, background, bg_image):
+def draw(window, background, bg_image, player):
     for tile in background:
         window.blit(bg_image, tile)
 
+    player.draw(window)
+
     pygame.display.update()
+
+def handle_move(player):        # updates x_velocity of player
+    keys = pygame.key.get_pressed()
+
+    player.x_vel = 0       # stops the player when no key is pressed
+    if keys[pygame.K_LEFT]:
+        player.move_left(PLAYER_VEL)
+    if keys[pygame.K_RIGHT]:
+        player.move_right(PLAYER_VEL)
 
 def main(window):    
     clock = pygame.time.Clock()
     background, bg_image = get_background("Green.png")
+
+    player = Player(100, 100, 50, 50)
 
     run = True
     while run:
@@ -46,7 +94,9 @@ def main(window):
                 run = False
                 break
 
-        draw(window, background, bg_image)
+        player.loop(FPS)
+        handle_move(player)
+        draw(window, background, bg_image, player)
 
     pygame.quit()
     quit()
